@@ -1,14 +1,41 @@
-import { MsgResponse, NftIdentificationInfo }  from './typings';
-import { extractHex }  from './utils';
+import { MsgResponse, NftIdentificationInfo } from './typings';
+import { extractHex } from './utils';
 
 (window as any).__dataverseNftCrawler = {
+    getNft: (platform: string) => {
+        switch(platform.toLocaleLowerCase()){
+            case "opensea":
+                return (window as any).__dataverseNftCrawler.opensea();
+                break;
+            case "superrare":
+                return (window as any).__dataverseNftCrawler.superrare();
+                break;
+            case "foundation":
+                return (window as any).__dataverseNftCrawler.foundation();
+                break;
+            case "twitter":
+                return (window as any).__dataverseNftCrawler.twitter();
+                break;
+            case "rarible":
+                return (window as any).__dataverseNftCrawler.rarible();
+                break;
+            case "niftygateway":
+                return (window as any).__dataverseNftCrawler.niftygateway();
+                break;
+            case "asyncart":
+                return (window as any).__dataverseNftCrawler.asyncart();
+                break;
+            default:
+                break;
+        }
+    },
     opensea: (): NftIdentificationInfo => {
         const nftInfo: NftIdentificationInfo = {
             contract: '',
             tokenId: '',
             platformUrl: location.href
         };
-        const response:MsgResponse<string | NftIdentificationInfo> = {
+        const response: MsgResponse<string | NftIdentificationInfo> = {
             code: -1,
             data: nftInfo
         };
@@ -16,11 +43,11 @@ import { extractHex }  from './utils';
             nftInfo.contract = extractHex(location.href)!;
             nftInfo.tokenId = location.href.split('?')[0].split(':')[1].split('/')[5];
             if (nftInfo.contract.length === 0 || nftInfo.tokenId.length === 0) {
-            response.code = -1;
-            response.data = 'notFoundNFT';
+                response.code = -1;
+                response.data = 'notFoundNFT';
             } else {
-            response.code = 0;
-            response.data = nftInfo;
+                response.code = 0;
+                response.data = nftInfo;
             }
         } else if (
             location.href.includes('https://opensea.io/assets/matic/0x') ||
@@ -36,15 +63,35 @@ import { extractHex }  from './utils';
     },
     superrare: () => {
         return "superrare";
-    }
+    },
+    foundation: () => {
+
+    },
+    twitter: () => {
+
+    },
+    rarible: () => {
+
+    },
+    niftygateway: () => {
+
+    },
+    asyncart: () => {
+
+    },
 }
 
 const listen = (() => {
     window.addEventListener("message", (e) => {
         if (e.data.msgType && e.data.msgType === "fetchNftRequest") {
+            // console.log("recived message", e);
+            // const nft = (window as any).__dataverseNftCrawler.opensea();
+            // const message = { msgType: "fetchNftResponse", platform: "opensea", data: nft };
+            // window.postMessage(message, "*");
             console.log("recived message", e);
-            const nft = (window as any).__dataverseNftCrawler.opensea();
-            const message = { msgType: "fetchNftResponse", platform: "opensea", data: nft };
+            const platFormType:string = e.data.platform;
+            const nft = (window as any).__dataverseNftCrawler.getNft(platFormType);
+            const message = { msgType: "fetchNftResponse", platform: platFormType, data: nft };
             window.postMessage(message, "*");
         }
     }, false);
