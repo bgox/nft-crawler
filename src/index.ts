@@ -321,10 +321,10 @@ import $ from 'cash-dom';
 }
 
 const listen = (() => {
-    window.addEventListener("message", (e) => {
+    window.addEventListener("message", async (e) => {
         if (e.data.msgType && e.data.msgType === "fetchNftRequest") {
             const platFormType: string = e.data.platform;
-            const res = (window as any).__dataverseNftCrawler.getNft(platFormType);
+            const res = await (window as any).__dataverseNftCrawler.getNft(platFormType);
             const message = { msgType: "fetchNftResponse", platform: platFormType, data: res };
             window.postMessage(message, "*");
         }
