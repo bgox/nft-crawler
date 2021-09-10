@@ -3,13 +3,43 @@ import { extractHex } from './utils';
 import $ from 'cash-dom';
 
 (window as any).__dataverseNftCrawler = {
-    getNft: async (platform: string) => {
-        switch (platform.toLocaleLowerCase()) {
+    // getNft: async (platform: string) => {
+    //     switch (platform.toLocaleLowerCase()) {
+    //         case "opensea":
+    //             return await (window as any).__dataverseNftCrawler.opensea();
+    //             break;
+    //         case "superrare":
+    //             return await (window as any).__dataverseNftCrawler.superrare();
+    //             break;
+    //         case "zora":
+    //             return await (window as any).__dataverseNftCrawler.zora();
+    //             break;
+    //         case "foundation":
+    //             return await (window as any).__dataverseNftCrawler.foundation();
+    //             break;
+    //         case "twitter":
+    //             return await (window as any).__dataverseNftCrawler.twitter();
+    //             break;
+    //         case "rarible":
+    //             return await (window as any).__dataverseNftCrawler.rarible();
+    //             break;
+    //         case "niftygateway":
+    //             return await (window as any).__dataverseNftCrawler.niftygateway();
+    //             break;
+    //         case "asyncart":
+    //             return await (window as any).__dataverseNftCrawler.asyncart();
+    //             break;
+    //         default:
+    //             break;
+    //     }
+    // },
+    getNft: async (data: any) => {
+        switch (data.platform.toLocaleLowerCase()) {
             case "opensea":
                 return await (window as any).__dataverseNftCrawler.opensea();
                 break;
             case "superrare":
-                return await (window as any).__dataverseNftCrawler.superrare();
+                return await (window as any).__dataverseNftCrawler.superrare(data.data);
                 break;
             case "zora":
                 return await (window as any).__dataverseNftCrawler.zora();
@@ -65,7 +95,7 @@ import $ from 'cash-dom';
         }
         return response;
     },
-    superrare: async () => {
+    superrare: async (data:any) => {
         const nftInfo: NftIdentificationInfo = {
             contract: '',
             tokenId: '',
@@ -75,48 +105,8 @@ import $ from 'cash-dom';
             code: -1,
             data: nftInfo
         };
-        const itemLinkSelector =
-            '.collectible-history-section > .collectible-history-item > .collectible-history-item-link';
-        const itemLinks = document.querySelectorAll<HTMLLinkElement>(itemLinkSelector);
-        if (!itemLinks) {
-            response.code = -1;
-            response.data = { msgType: 'geNFTFromDetailPage', msgContent: '' };
-            return response;
-        }
-
-        const domUrl = itemLinks[itemLinks.length - 1].href ?? '';
-        const redirectUrl = `<a href='${domUrl}' target='_blank'>[view tx]</a>`;
-        let url = `${domUrl}#eventlog`;
-
-        let handle;
-        
-        const promise: any = new Promise((resolve) => {
-            handle = (e: any) => {
-                if (e.data.msgType && e.data.msgType === "fetchSuperrareNftResponse") {
-                    return resolve(e.data.data);
-                }
-            }
-            (window as any).addEventListener("message", handle, false);
-            const message = { msgType: "fetchSuperrareNftRequest", url: url };
-            (window as any).postMessage(message, "*");
-        });
-        let data: any = await promise;
-
-        // try {
-        //     data = await fetch(url, {
-        //         method: 'GET',
-        //         mode: 'no-cors',
-        //         cache: 'no-cache',
-        //         redirect: 'follow'
-        //     });
-        // } catch (error) {
-        //     console.log(error);
-        //     response.code = -1;
-        //     response.data = { msgType: 'validViewTX', msgContent: redirectUrl };
-        //     return response;
-        // }
-        
-        const $html = $(data);
+        const redirectUrl = `<a href='${data.url}' target='_blank'>[view tx]</a>`;
+        const $html = $(data.dom);
         try {
             const dl = $($html).find('#myTabContent #eventlog .card-body .media .media-body dl');
             if (!dl || dl.length === 0) {
@@ -149,6 +139,27 @@ import $ from 'cash-dom';
             response.data = { msgType: 'validViewTX', msgContent: redirectUrl };
             return response;
         }
+    },
+    superrareEtherscanUrl: async () => {
+        const response: MsgResponse<string | any> = {
+            code: -1,
+            data: ""
+        };
+
+        const itemLinkSelector =
+        '.collectible-history-section > .collectible-history-item > .collectible-history-item-link';
+        const itemLinks = document.querySelectorAll<HTMLLinkElement>(itemLinkSelector);
+        if (!itemLinks) {
+            response.code = -1;
+            response.data = { msgType: 'geNFTFromDetailPage', msgContent: '' };
+            return response;
+        }
+
+        const domUrl = itemLinks[itemLinks.length - 1].href ?? '';
+        let url = `${domUrl}#eventlog`;
+        response.code = 0;
+        response.data = url;
+        return response;
     },
     zora: async () => {
         const nftInfo: NftIdentificationInfo = {
@@ -331,14 +342,22 @@ import $ from 'cash-dom';
         }
         return response;
     },
+    
 }
 
 const listen = (() => {
     window.addEventListener("message", async (e) => {
         if (e.data.msgType && e.data.msgType === "fetchNftRequest") {
+            // const platFormType: string = e.data.platform;
+            // const res = await (window as any).__dataverseNftCrawler.getNft(platFormType);
             const platFormType: string = e.data.platform;
-            const res = await (window as any).__dataverseNftCrawler.getNft(platFormType);
+            const res = await (window as any).__dataverseNftCrawler.getNft(e.data);
             const message = { msgType: "fetchNftResponse", platform: platFormType, data: res };
+            window.postMessage(message, "*");
+        }
+        if (e.data.msgType && e.data.msgType === "fetchSuperrareEtherscanUrlRequest") {
+            const res = await (window as any).__dataverseNftCrawler.superrareEtherscanUrl();
+            const message = { msgType: "fetchSuperrareEtherscanUrlResponse", data: res };
             window.postMessage(message, "*");
         }
     }, false);
