@@ -87,11 +87,27 @@ import $ from 'cash-dom';
         const domUrl = itemLinks[itemLinks.length - 1].href ?? '';
         const redirectUrl = `<a href='${domUrl}' target='_blank'>[view tx]</a>`;
         let url = `${domUrl}#eventlog`;
-        // let data = '';
-        // let resp: AxiosResponse<string> | undefined;
+
+        let handle;
+        
+        const promise: any = new Promise((resolve) => {
+            handle = (e: any) => {
+                if (e.data.msgType && e.data.msgType === "fetchSuperrareNftResponse") {
+                    return resolve(e.data.data);
+                }
+            }
+            (window as any).addEventListener("message", handle, false);
+            const message = { msgType: "fetchSuperrareNftRequest", url: url };
+            (window as any).postMessage(message, "*");
+        });
+        let data: any = await promise;
+
         // try {
-        //     resp = await axios.get(url, {
-        //         timeout: 5000,
+        //     data = await fetch(url, {
+        //         method: 'GET',
+        //         mode: 'no-cors',
+        //         cache: 'no-cache',
+        //         redirect: 'follow'
         //     });
         // } catch (error) {
         //     console.log(error);
@@ -99,22 +115,7 @@ import $ from 'cash-dom';
         //     response.data = { msgType: 'validViewTX', msgContent: redirectUrl };
         //     return response;
         // }
-        // data = resp?.data ?? '';
-        // await axios.get(url);
-        let data:any;
-        try{
-            data = await fetch(url,{
-                method: 'GET',
-                mode: 'no-cors',
-                cache: 'no-cache',
-                redirect: 'follow'
-            });
-        } catch (error) {
-            console.log(error);
-            response.code = -1;
-            response.data = { msgType: 'validViewTX', msgContent: redirectUrl };
-            return response;
-        }
+        
         const $html = $(data);
         try {
             const dl = $($html).find('#myTabContent #eventlog .card-body .media .media-body dl');
