@@ -3,9 +3,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const TerserPlugin = require("terser-webpack-plugin");
 
 module.exports = {
-  mode: "development",
+  mode: "production",
   entry: "./src/index.ts",
-  devtool: 'inline-source-map',
   plugins: [
     new HtmlWebpackPlugin({
         template: './src/index.html',
