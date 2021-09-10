@@ -105,7 +105,7 @@ import $ from 'cash-dom';
         try{
             data = await fetch(url,{
                 method: 'GET',
-                mode: 'cors',
+                mode: 'no-cors',
                 cache: 'no-cache',
                 redirect: 'follow'
             });
