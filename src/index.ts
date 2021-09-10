@@ -1,6 +1,5 @@
 import { MsgResponse, NftIdentificationInfo } from './typings';
 import { extractHex } from './utils';
-// import axios, { AxiosResponse } from 'axios';
 import $ from 'cash-dom';
 
 (window as any).__dataverseNftCrawler = {
@@ -102,7 +101,20 @@ import $ from 'cash-dom';
         // }
         // data = resp?.data ?? '';
         // await axios.get(url);
-        const data:any = await fetch(url);
+        let data:any;
+        try{
+            data = await fetch(url,{
+                method: 'GET',
+                mode: 'cors',
+                cache: 'no-cache',
+                redirect: 'follow'
+            });
+        } catch (error) {
+            console.log(error);
+            response.code = -1;
+            response.data = { msgType: 'validViewTX', msgContent: redirectUrl };
+            return response;
+        }
         const $html = $(data);
         try {
             const dl = $($html).find('#myTabContent #eventlog .card-body .media .media-body dl');
